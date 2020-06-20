@@ -1,3 +1,7 @@
+.board {
+  display: table;
+}
+
 .square {
   width: 40px;
   height: 40px;
@@ -5,6 +9,45 @@
   border: solid 1px;
   margin: 1px;
   float: left;
+  text-align: center;
+  display : flex;
+  align-items : center;
+  justify-content: center;
+  position: relative;
+}
+
+.square.TW {
+  background-color: rgb(243, 103, 103, 0.8);
+}
+
+.square.TL {
+  background-color: rgb(39, 95, 248, 0.6);
+}
+
+.square.DW {
+  background-color: orange;
+}
+
+.square.DL {
+  background-color:lightgreen
+}
+
+.square .reward {
+  font-size: x-small;
+  float: left;
+}
+
+.square .value {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+.square .score {
+  position: absolute;
+  font-size: small;
+  top: 10px;
+  left: 30px;
 }
 
 .row {

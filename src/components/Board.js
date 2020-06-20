@@ -7,11 +7,12 @@ const Board = () => {
 
   const store = useStore();
   const { numRows, numCols } = store.size;
+  const board = store.board;
 
   const createRow = () => {
     const squares = [];
     for (let i = 0; i < numCols; ++i) {
-      squares.push(<Square key={i}/>);
+      squares.push(<Square key={i} reward="N"/>);
     }
     return squares;
   }
@@ -24,9 +25,26 @@ const Board = () => {
     return rows;
   }
 
+  const renderBoard = () => {
+    const rows = [];
+    for (const row of board) {
+      const squares = []
+      for (const square of row) {
+        squares.push(
+          <Square
+            key={squares.length}
+            data={{...square }}
+          />
+        )
+      }
+      rows.push(<div className="row" key={rows.length}>{ squares }</div>);
+    }
+    return rows;
+  }
+
   return (
     <div className="board">
-      { createBoard() }
+      { renderBoard() }
     </div>
   )
 }
