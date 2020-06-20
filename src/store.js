@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocalStore } from 'mobx-react';
 import { init } from './service/init';
 
-init();
 
 const StoreContext = React.createContext();
 
@@ -11,6 +10,8 @@ export const StoreProvider = ({ children }) => {
     size: { numRows: 15, numCols: 15 },
     board: {}
   }))
+
+  init(store);
 
   return (
     <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
