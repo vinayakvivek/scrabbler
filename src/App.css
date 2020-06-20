@@ -1,0 +1,12 @@
+.square {
+  width: 40px;
+  height: 40px;
+  background-color: #EEEEEE;
+  border: solid 1px;
+  margin: 1px;
+  float: left;
+}
+
+.row {
+  clear: left;
+}
