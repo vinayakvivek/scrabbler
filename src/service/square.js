@@ -19,7 +19,6 @@ export class Square {
     this.reward = reward;
     this.value = null;
     this.score = 0;
-    this.focus = false;
   }
 
   setTile(value, score) {

@@ -8,7 +8,11 @@ const StoreContext = React.createContext();
 export const StoreProvider = ({ children }) => {
   const store = useLocalStore(() => ({
     size: { numRows: 15, numCols: 15 },
-    board: {}
+    board: {},
+    posInFocus: { x: 0, y: 0 },
+    setFocus: (pos) => {
+      store.posInFocus = pos;
+    }
   }))
 
   init(store);

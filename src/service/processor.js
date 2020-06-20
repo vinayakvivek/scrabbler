@@ -1,3 +1,4 @@
+import { autorun } from 'mobx';
 
 export const Direction = {
   RIGHT: 0,
@@ -45,33 +46,35 @@ function timer(ms) {
 
 export class WordProcessor {
 
-  constructor(board) {
+  constructor(board, setFocus) {
     this.board = board;
+    this.setFocus = setFocus;
   }
 
-  square(pos) {
-    const s = this.board[pos.x][pos.y];
-    return s;
+  async square(pos) {
+    this.setFocus(pos);
+    await timer(500);
+    return this.board[pos.x][pos.y];
   }
 
-  partialWordUtil(pos, direction) {
+  async partialWordUtil(pos, direction) {
     let score = 0;
     let word = ''
-    let currSq = this.square(nextPos(pos, direction));
+    let currSq = await this.square(nextPos(pos, direction));
     while (currSq.value) {
       score += currSq.score;
       word += currSq.value;
-      currSq = this.square(nextPos(currSq.pos, direction));
+      currSq = await this.square(nextPos(currSq.pos, direction));
     }
     return { score, word };
   }
 
-  partialWordScore(pos, direction) {
-    const sq = this.square(pos);
+  async partialWordScore(pos, direction) {
+    const sq = await this.square(pos);
     let score = 0;
 
-    const part1 = this.partialWordUtil(pos, direction);
-    const part2 = this.partialWordUtil(pos, oppositeDirection[direction]);
+    const part1 = await this.partialWordUtil(pos, direction);
+    const part2 = await this.partialWordUtil(pos, oppositeDirection[direction]);
 
     const word = [...part2.word].reverse().join('') + sq.value + part1.word;
     if (word.length === 1) {
@@ -97,9 +100,10 @@ export class WordProcessor {
 
   async wordScore(startPos, direction) {
     let [score, extraScore, dw, tw] = [0, 0, 0, 0];
-    let currSq = this.square(startPos);
+    let currSq = await this.square(startPos);
+    currSq.focus = true;
     while (currSq.value) {
-      let { partialScore, partialWord, invalid } = this.partialWordScore(currSq.pos, acrossDirection[direction]);
+      let { partialScore, partialWord, invalid } = await this.partialWordScore(currSq.pos, acrossDirection[direction]);
       console.log({ partialScore, partialWord, invalid });
       if (invalid) {
         console.log(`Invalid across word at ${currSq.pos}: ${partialWord}`);
@@ -118,7 +122,7 @@ export class WordProcessor {
         default:
       }
       extraScore += partialScore;
-      currSq = this.square(nextPos(currSq.pos, direction));
+      currSq = await this.square(nextPos(currSq.pos, direction));
     }
 
     if (dw) {

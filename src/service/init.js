@@ -51,7 +51,7 @@ const createBoard = () => {
 export const init = (store) => {
   const board = createBoard();
   store.board = board;
-  const processor = new WordProcessor(board);
+  const processor = new WordProcessor(board, store.setFocus);
   processor.wordScore({ x: 8, y: 8 }, Direction.RIGHT);
 }
 

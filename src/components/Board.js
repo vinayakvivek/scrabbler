@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { observer } from "mobx-react";
 import { useStore } from '../store'
 import Square from './Square';
@@ -6,8 +6,12 @@ import Square from './Square';
 const Board = () => {
 
   const store = useStore();
-  const { numRows, numCols } = store.size;
   const board = store.board;
+  const posInFocus = store.posInFocus;
+
+  const isInFocus = (pos) => {
+    return posInFocus.x === pos.x && posInFocus.y === pos.y;
+  }
 
   const renderBoard = () => {
     const rows = [];
@@ -17,7 +21,7 @@ const Board = () => {
         squares.push(
           <Square
             key={squares.length}
-            data={{...square }}
+            data={{...square, focus: isInFocus(square.pos) }}
           />
         )
       }
