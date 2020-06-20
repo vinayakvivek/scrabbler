@@ -9,22 +9,6 @@ const Board = () => {
   const { numRows, numCols } = store.size;
   const board = store.board;
 
-  const createRow = () => {
-    const squares = [];
-    for (let i = 0; i < numCols; ++i) {
-      squares.push(<Square key={i} reward="N"/>);
-    }
-    return squares;
-  }
-
-  const createBoard = () => {
-    const rows = []
-    for (let i = 0; i < numRows; ++i) {
-      rows.push(<div className="row" key={i}>{ createRow() }</div>);
-    }
-    return rows;
-  }
-
   const renderBoard = () => {
     const rows = [];
     for (const row of board) {

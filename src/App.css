@@ -50,6 +50,10 @@
   left: 30px;
 }
 
+.square.focus {
+  background-color: blueviolet;
+}
+
 .row {
   clear: left;
 }

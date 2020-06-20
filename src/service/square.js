@@ -13,11 +13,13 @@ export const LETTER_SCORES = {
 
 export class Square {
 
-  constructor(position, reward) {
-    this.position = position;
+  constructor(position, reward, isBorder = false) {
+    this.pos = position;
+    this.isBorder = isBorder;
     this.reward = reward;
     this.value = null;
     this.score = 0;
+    this.focus = false;
   }
 
   setTile(value, score) {

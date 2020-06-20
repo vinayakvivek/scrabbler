@@ -2,6 +2,7 @@ import data from './word-trie-large-caps.json';
 import boardData from './sample_board.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';
+import { WordProcessor, Direction } from './processor'
 
 
 function readNode(obj, parentNode) {
@@ -22,26 +23,35 @@ const createTrie = () => {
   return trie;
 }
 
-export const init = (store) => {
-  // console.log(createTrie());
+const createBoard = () => {
+  const [numRows, numCols] = boardData.size;
   const board = [];
-  for (let rowData of boardData.squares) {
+  for (let i = 0; i <= numRows + 1; ++i) {
     const row = []
-    for (let reward of rowData) {
-      row.push(new Square({x: board.length, y: row.length}, reward))
+    for (let j = 0; j <= numCols + 1; ++j) {
+      if (i === 0 || i === numRows + 1 || j === 0 || j === numCols + 1) {
+        row.push(new Square({x: i, y: j}, null, true))
+      } else {
+        const s = new Square({x: i, y: j}, boardData.squares[i - 1][j - 1]);
+        const tile = boardData.tiles[i - 1][j - 1];
+        if (tile !== 'x') {
+          s.setTile(tile);
+        }
+        row.push(s)
+      }
     }
     board.push(row);
-  }
-  for (let x in boardData.tiles) {
-    for (let y in boardData.tiles[x]) {
-      const value = boardData.tiles[x][y];
-      if (value !== 'x')
-        board[x][y].setTile(value);
-    }
   }
   for (const pos of boardData.blanks) {
     board[pos[0]][pos[1]].score = 0;
   }
+  return board;
+}
+
+export const init = (store) => {
+  const board = createBoard();
   store.board = board;
+  const processor = new WordProcessor(board);
+  processor.wordScore({ x: 8, y: 8 }, Direction.RIGHT);
 }
 
