@@ -32,6 +32,10 @@
   background-color:lightgreen
 }
 
+.square.focus {
+  background-color: blueviolet;
+}
+
 .square .reward {
   font-size: x-small;
   float: left;
@@ -62,10 +66,6 @@
   font-size: small;
   top: 0px;
   left: 10px;
-}
-
-.square.focus {
-  background-color: blueviolet;
 }
 
 .row {

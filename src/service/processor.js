@@ -153,8 +153,58 @@ export class WordProcessor {
     console.log(score, extraScore, dw, tw);
   }
 
-  async tempWordScore(word, anchor, direction) {
-
+  async tempWordScore(word, startPos, direction) {
+    const letters = [...word];
+    let sq = await this.square(startPos);
+    let [score, extraScore, dw, tw] = [0, 0, 0, 0];
+    for (const letter of letters) {
+      if (sq.value) {
+        score += sq.score;
+      } else {
+        sq.setTempTile(letter);
+        score += sq.tempScore;
+        switch (sq.reward) {
+          case Reward.TW:
+            tw++; break;
+          case Reward.TL:
+            score += 2 * sq.tempScore; break;
+          case Reward.DW:
+            dw++; break;
+          case Reward.DL:
+            score += sq.tempScore; break;
+          default:
+        }
+        if (sq.anchorData) {
+          let data = direction === Direction.RIGHT ? sq.anchorData.topToBottom : sq.anchorData.leftToRight;
+          const acrossWord = data.p1 + letter + data.p2;
+          if (acrossWord.length > 1) {
+            // TODO: check validity
+            switch (sq.reward) {
+              case Reward.TW:
+                extraScore += 3 * (data.score + sq.tempScore); break;
+              case Reward.TL:
+                extraScore += (data.score + 3 * sq.tempScore); break;
+              case Reward.DW:
+                extraScore += 2 * (data.score + sq.tempScore); break;
+              case Reward.DL:
+                extraScore += (data.score + 2 * sq.tempScore); break;
+              default:
+                extraScore += (data.score + sq.tempScore);
+            }
+          }
+        }
+      }
+      this.setFocus(sq.pos);
+      await timer(500);
+      sq = await this.square(nextPos(sq.pos, direction))
+    }
+    if (dw) {
+      score *= 2 * dw;
+    }
+    if (tw) {
+      score *= 3 * tw;
+    }
+    console.log(score, extraScore, dw, tw);
   }
 
   async leftPart(partialWord, node, limit) {
@@ -213,8 +263,8 @@ export class WordProcessor {
           if (b[x + 1][y].value || b[x - 1][y].value || b[x][y + 1].value || b[x][y - 1].value) {
             anchors.push({ x, y });
             s.anchorData = await this.anchorValue({ x, y });
-            this.setFocus({ x, y });
-            await timer(500);
+            // this.setFocus({ x, y });
+            // await timer(500);
           }
         }
       }
@@ -227,6 +277,7 @@ export class WordProcessor {
     // console.log(await this.limit(pos, Direction.LEFT));
     // this.setFocus(pos);
     await this.findAnchors();
+    await this.tempWordScore('OUTGREW', { x: 9, y: 2 }, Direction.RIGHT);
     // await this.leftPart('', this.trie.rootNode, 5);
   }
 
