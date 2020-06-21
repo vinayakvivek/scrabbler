@@ -1,5 +1,5 @@
 import data from './word-trie-large-caps.json';
-import boardData from './sample_board.json';
+import boardData from './boards/board1.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';
 import { WordProcessor, Direction } from './processor'
