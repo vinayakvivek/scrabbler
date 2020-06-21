@@ -177,7 +177,7 @@ export class WordProcessor {
     const sq = this.square(pos);
     if (sq.isBorder) return;
     if (!sq.value) {
-      if (node.t && this.checkPositionValidity(pos, direction)) {
+      if (node.t && this.checkPositionValidity(pos, direction) && partialWord) {
         let startPos;
         if (direction === Direction.RIGHT)
           startPos = { x: pos.x, y: pos.y - partialWord.length};
@@ -299,31 +299,39 @@ export class WordProcessor {
     return anchors;
   }
 
+  setRack(letters) {
+    [...letters].forEach(l => {
+      this.insertInRack(l);
+    })
+  }
+
   async generateWords() {
 
-    this.insertInRack('O');
-    this.insertInRack('U');
-    this.insertInRack('T');
-    this.insertInRack('G');
-    this.insertInRack('R');
-    this.insertInRack('E');
-    this.insertInRack('W');
+    this.setRack('SGDLOLS');
 
     const anchors = await this.findAnchors();
 
+    if (!anchors.length) {
+      // starting position
+      const centerPos = {x: 8, y: 8};
+      this.square(centerPos).anchorData = await this.anchorValue(centerPos);
+      anchors.push(centerPos);
+    }
 
     this.legalMoves = [];
     for (const anchor of anchors) {
       await this.generateMoves(anchor, Direction.BOTTOM);
       await this.generateMoves(anchor, Direction.RIGHT);
       this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
-      this.legalMoves = this.legalMoves.slice(0, 20);
+      this.legalMoves = this.legalMoves.slice(0, 50);
     }
 
+
     for (const move of this.legalMoves) {
-      await this.tempWordScore(move.word, move.startPos, move.direction, true);
-      console.log(move.word, this.trie.isWordValid(move.word));
+      // await this.tempWordScore(move.word, move.startPos, move.direction, true);
+      console.log(move);
     }
+    console.log(this.trie.rootNode);
   }
 
 }
