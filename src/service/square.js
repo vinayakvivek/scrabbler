@@ -27,13 +27,19 @@ export class Square {
     this.value = value;
   }
 
+  removeTile() {
+    this.value = null;
+    this.score = 0;
+  }
+
   setTempTile(value, score) {
     this.tempScore = score || LETTER_SCORES[value];
     this.tempValue = value;
   }
 
-  removeTile() {
-    this.value = null;
-    this.score = 0;
+  removeTempTile() {
+    this.tempScore = null;
+    this.tempValue = 0;
   }
+
 }
