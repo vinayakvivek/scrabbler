@@ -1,4 +1,3 @@
-import { autorun } from 'mobx';
 
 export const Direction = {
   RIGHT: 0,
@@ -44,16 +43,36 @@ function timer(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
 
+function reverse(s) {
+  return [...s].reverse().join('');
+}
+
 export class WordProcessor {
 
-  constructor(board, setFocus) {
-    this.board = board;
-    this.setFocus = setFocus;
+  constructor(store, trie) {
+    this.store = store;
+    this.board = store.board;
+    this.setFocus = store.setFocus;
+    this.trie = trie;
+    this.rack = [..."OUTGREW"];
+    this.anchor = { x: 9, y: 8 }
+    this.setFocus(this.anchor);
+  }
+
+  async placeTile(pos, letter) {
+    this.board[pos.x][pos.y].setTile(letter);
+    this.rack.remove(letter);
+  }
+
+  async putBackTile(pos) {
+    const s = this.board[pos.x][pos.y];
+    this.rack.push(s.value);
+    s.removeTile();
   }
 
   async square(pos) {
-    this.setFocus(pos);
-    await timer(500);
+    // this.setFocus(pos);
+    // await timer(500);
     return this.board[pos.x][pos.y];
   }
 
@@ -132,6 +151,83 @@ export class WordProcessor {
       score *= 3 * tw;
     }
     console.log(score, extraScore, dw, tw);
+  }
+
+  async tempWordScore(word, anchor, direction) {
+
+  }
+
+  async leftPart(partialWord, node, limit) {
+    // extend right
+    if (limit > 0) {
+      for (const e in node.c) {
+        if (this.rack.includes(e)) {
+          this.placeTile(e);
+        }
+      }
+    }
+  }
+
+  async limit(pos, direction) {
+    let limit = 0;
+    let sq = await this.square(nextPos(pos, direction));
+    while (!sq.value && !sq.isBorder) {
+      limit++;
+      sq = await this.square(nextPos(sq.pos, direction));
+    }
+    return limit;
+  }
+
+  async anchorValue(anchorPos) {
+    const leftPart = await this.partialWordUtil(anchorPos, Direction.LEFT);
+    const rightPart = await this.partialWordUtil(anchorPos, Direction.RIGHT);
+    const topPart = await this.partialWordUtil(anchorPos, Direction.TOP);
+    const bottomPart = await this.partialWordUtil(anchorPos, Direction.BOTTOM);
+
+    const leftToRight = {
+      p1: reverse(leftPart.word),
+      p2: rightPart.word,
+      score: leftPart.score + rightPart.score,
+      limit: await this.limit(anchorPos, Direction.LEFT)
+    }
+
+    const topToBottom = {
+      p1: reverse(topPart.word),
+      p2: bottomPart.word,
+      score: topPart.score + bottomPart.score,
+      limit: await this.limit(anchorPos, Direction.TOP)
+    }
+
+    return { leftToRight, topToBottom };
+  }
+
+  async findAnchors() {
+    const b = this.board;
+    const [nr, nc] = [b.length, b[0].length];
+    const anchors = [];
+    for (let x = 1; x < nr - 1; ++x) {
+      for (let y = 1; y < nc - 1; ++y) {
+        const s = b[x][y];
+        s.anchorData = null;
+        if (!s.value) {
+          if (b[x + 1][y].value || b[x - 1][y].value || b[x][y + 1].value || b[x][y - 1].value) {
+            anchors.push({ x, y });
+            s.anchorData = await this.anchorValue({ x, y });
+            this.setFocus({ x, y });
+            await timer(500);
+          }
+        }
+      }
+    }
+    return anchors;
+  }
+
+  async generateWords() {
+    const pos = { x: 8, y: 7 };
+    // console.log(await this.limit(pos, Direction.LEFT));
+    // this.setFocus(pos);
+    await this.findAnchors();
+    // await this.leftPart('', this.trie.rootNode, 5);
   }
 
 }

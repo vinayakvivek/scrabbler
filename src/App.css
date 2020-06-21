@@ -50,6 +50,20 @@
   left: 30px;
 }
 
+.square .anchor-score {
+  position: absolute;
+  font-size: small;
+  top: 10px;
+  left: 10px;
+}
+
+.square .anchor-limit {
+  position: absolute;
+  font-size: small;
+  top: 0px;
+  left: 10px;
+}
+
 .square.focus {
   background-color: blueviolet;
 }

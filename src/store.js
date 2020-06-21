@@ -9,9 +9,12 @@ export const StoreProvider = ({ children }) => {
   const store = useLocalStore(() => ({
     size: { numRows: 15, numCols: 15 },
     board: {},
-    posInFocus: { x: 0, y: 0 },
+    posInFocus: { x: 1, y: 1 },
     setFocus: (pos) => {
       store.posInFocus = pos;
+    },
+    setScore: (pos, score) => {
+      store.board[pos.x][pos.y].score = score;
     }
   }))
 
