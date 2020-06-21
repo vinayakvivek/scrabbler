@@ -159,46 +159,60 @@ export class WordProcessor {
     if (tw) {
       score *= 3 * tw;
     }
-    if (animate) await this.focusAndWait(this.anchor, 500);
+    if (animate) await this.focusAndWait(this.anchor, 1000);
     await this.removeTempData(word, startPos, direction);
     // console.log(score, extraScore, dw, tw);
     return score + extraScore;
   }
 
-  async extendRight(partialWord, node, pos) {
+  checkPositionValidity(pos, direction) {
+    if (direction === Direction.RIGHT) {
+      return pos.y > this.anchor.y;
+    } else {
+      return pos.x > this.anchor.x;
+    }
+  }
+
+  async extendRight(partialWord, node, pos, direction) {
     const sq = this.square(pos);
     if (sq.isBorder) return;
     if (!sq.value) {
-      if (node.t) {
-        const startPos = { x: pos.x, y: pos.y - partialWord.length};
-        const score = await this.tempWordScore(partialWord, startPos, Direction.RIGHT);
-        this.legalMoves.push({ word: partialWord, score, startPos });
+      if (node.t && this.checkPositionValidity(pos, direction)) {
+        let startPos;
+        if (direction === Direction.RIGHT)
+          startPos = { x: pos.x, y: pos.y - partialWord.length};
+        else
+          startPos = { x: pos.x - partialWord.length, y: pos.y}
+        const score = await this.tempWordScore(partialWord, startPos, direction);
+        this.legalMoves.push({ word: partialWord, score, startPos, direction });
       }
       for (const e in node.c) {
         if (e in this.rack) {
-          if (sq.anchorData && !sq.anchorData.topToBottom.crossList.includes(e)) {
-            continue;
+          if (sq.anchorData) {
+            const crossList = direction === Direction.RIGHT ? sq.anchorData.topToBottom.crossList : sq.anchorData.leftToRight.crossList;
+            if (!crossList.includes(e))
+              continue;
           }
           this.removeFromRack(e);
-          await this.extendRight(partialWord + e, node.c[e], nextPos(pos, Direction.RIGHT));
+          await this.extendRight(partialWord + e, node.c[e], nextPos(pos, direction), direction);
           this.insertInRack(e);
         }
       }
     } else {
       const l = sq.value;
       if (l in node.c) {
-        await this.extendRight(partialWord + l, node.c[l], nextPos(pos, Direction.RIGHT))
+        await this.extendRight(partialWord + l, node.c[l], nextPos(pos, direction), direction)
       }
     }
   }
 
-  async leftPart(partialWord, node, limit) {
-    await this.extendRight(partialWord, node, this.anchor);
+  async leftPart(partialWord, node, limit, direction) {
+    await this.extendRight(partialWord, node, this.anchor, direction);
     if (limit > 0) {
       for (const e in node.c) {
         if (e in this.rack) {
           this.removeFromRack(e);
-          await this.leftPart(partialWord + e, node.c[e], limit - 1);
+          await this.leftPart(partialWord + e, node.c[e], limit - 1, direction);
           this.insertInRack(e);
         }
       }
@@ -282,30 +296,26 @@ export class WordProcessor {
     this.insertInRack('W');
 
     const anchors = await this.findAnchors();
-    // await this.tempWordScore('OUTGREW', { x: 9, y: 2 }, Direction.RIGHT);
-    // await this.tempWordScore('OUTGREW', { x: 7, y: 5 }, Direction.RIGHT);
-    this.anchor = { x: 9, y: 8 };
 
-    // console.log(this.square(this.anchor).anchorData);
-    // this.legalMoves = [];
-    // await this.leftPart('', this.trie.rootNode, 2);
-    // this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
-    // this.legalMoves = this.legalMoves.slice(0, 20);
-    // console.log(this.legalMoves);
 
     this.legalMoves = [];
     for (const anchor of anchors) {
       this.anchor = anchor;
-      const limit = (this.square(anchor)).anchorData.leftToRight.limit;
-      await this.leftPart('', this.trie.rootNode, limit);
+      const sq = this.square(anchor);
+      const leftLimit = sq.anchorData.leftToRight.limit;
+      const topLimit = sq.anchorData.topToBottom.limit;
+      // await this.leftPart('', this.trie.rootNode, leftLimit, Direction.RIGHT);
+      await this.leftPart('', this.trie.rootNode, topLimit, Direction.BOTTOM);
       this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
       this.legalMoves = this.legalMoves.slice(0, 20);
     }
 
     for (const move of this.legalMoves) {
-      await this.tempWordScore(move.word, move.startPos, Direction.RIGHT, true);
+      await this.tempWordScore(move.word, move.startPos, move.direction, true);
       console.log(move.word, this.trie.isWordValid(move.word));
     }
+
+    console.log(this.trie.isWordValid("TALACK"))
 
     // await this.leftPart('', this.trie.rootNode, 5);
   }
