@@ -1,4 +1,4 @@
-import data from './word-trie-large-caps.json';
+import data from './word-trie-small-caps.json';
 import boardData from './boards/board1.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';

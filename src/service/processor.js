@@ -159,7 +159,7 @@ export class WordProcessor {
     if (tw) {
       score *= 3 * tw;
     }
-    if (animate) await this.focusAndWait(this.anchor, 100);
+    if (animate) await this.focusAndWait(this.anchor, 500);
     await this.removeTempData(word, startPos, direction);
     // console.log(score, extraScore, dw, tw);
     return score + extraScore;
@@ -167,6 +167,7 @@ export class WordProcessor {
 
   async extendRight(partialWord, node, pos) {
     const sq = this.square(pos);
+    if (sq.isBorder) return;
     if (!sq.value) {
       if (node.t) {
         const startPos = { x: pos.x, y: pos.y - partialWord.length};
@@ -192,13 +193,6 @@ export class WordProcessor {
   }
 
   async leftPart(partialWord, node, limit) {
-    // console.log(partialWord);
-    // if (partialWord.length > 0) {
-    //   let { x, y } = this.anchor;
-    //   y -= (partialWord.length - 1);
-    //   await this.tempWordScore(partialWord, {x, y}, Direction.RIGHT);
-    // }
-    // extend right
     await this.extendRight(partialWord, node, this.anchor);
     if (limit > 0) {
       for (const e in node.c) {
@@ -214,7 +208,7 @@ export class WordProcessor {
   async limit(pos, direction) {
     let limit = 0;
     let sq = this.square(nextPos(pos, direction));
-    while (!sq.value && !sq.isBorder) {
+    while (!sq.value && !sq.anchorData && !sq.isBorder) {
       limit++;
       sq = this.square(nextPos(sq.pos, direction));
     }
@@ -291,15 +285,27 @@ export class WordProcessor {
     // await this.tempWordScore('OUTGREW', { x: 9, y: 2 }, Direction.RIGHT);
     // await this.tempWordScore('OUTGREW', { x: 7, y: 5 }, Direction.RIGHT);
     this.anchor = { x: 9, y: 8 };
-    const limit = (this.square(this.anchor)).anchorData.leftToRight.limit;
 
-    console.log(this.square(this.anchor).anchorData);
+    // console.log(this.square(this.anchor).anchorData);
+    // this.legalMoves = [];
+    // await this.leftPart('', this.trie.rootNode, 2);
+    // this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
+    // this.legalMoves = this.legalMoves.slice(0, 20);
+    // console.log(this.legalMoves);
+
     this.legalMoves = [];
-    await this.leftPart('', this.trie.rootNode, 2);
-    this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
-    console.log(this.legalMoves);
+    for (const anchor of anchors) {
+      this.anchor = anchor;
+      const limit = (this.square(anchor)).anchorData.leftToRight.limit;
+      await this.leftPart('', this.trie.rootNode, limit);
+      this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
+      this.legalMoves = this.legalMoves.slice(0, 20);
+    }
 
-
+    for (const move of this.legalMoves) {
+      await this.tempWordScore(move.word, move.startPos, Direction.RIGHT, true);
+      console.log(move.word, this.trie.isWordValid(move.word));
+    }
 
     // await this.leftPart('', this.trie.rootNode, 5);
   }
