@@ -19,10 +19,16 @@ export class Square {
     this.reward = reward;
     this.value = null;
     this.score = 0;
+    this.anchorData = null;
   }
 
   setTile(value, score) {
     this.score = score || LETTER_SCORES[value];
     this.value = value;
+  }
+
+  removeTile() {
+    this.value = null;
+    this.score = 0;
   }
 }
