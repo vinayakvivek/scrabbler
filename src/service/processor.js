@@ -1,4 +1,5 @@
 import { LETTER_SCORES } from './square';
+import { scryRenderedDOMComponentsWithClass } from 'react-dom/test-utils';
 
 export const Direction = {
   RIGHT: 0,
@@ -82,6 +83,21 @@ export class WordProcessor {
     return this.board[pos.x][pos.y];
   }
 
+  focusWord(word, startPos, direction) {
+    let sq = this.square(startPos);
+    for (const letter of word) {
+      if (!sq.value) {
+        if (letter.blank) {
+          sq.setTempTile(letter.value, 0);
+        } else {
+          sq.setTempTile(letter.value);
+        }
+      }
+      sq.focus = true;
+      sq = this.square(nextPos(sq.pos, direction))
+    }
+  }
+
   partialWordUtil(pos, direction) {
     let score = 0;
     let word = ''
@@ -99,30 +115,19 @@ export class WordProcessor {
     let n = word.length;
     while (!sq.isBorder && n--) {
       sq.removeTempTile();
+      sq.focus = false;
       sq = this.square(nextPos(sq.pos, direction))
     }
   }
 
-  /**
-   *
-   * @param {*} word Array of Letter
-   * @param {*} startPos
-   * @param {*} direction
-   * @param {*} removeTempData
-   */
-  tempWordScore(word, startPos, direction, removeTempData = true) {
+  tempWordScore(word, startPos, direction) {
     let sq = this.square(startPos);
     let [score, extraScore, dw, tw] = [0, 0, 0, 0];
     for (const letter of word) {
       if (sq.value) {
         score += sq.score;
       } else {
-        if (letter.blank) {
-          sq.setTempTile(letter.value, 0);
-        } else {
-          sq.setTempTile(letter.value);
-        }
-        const letterScore = sq.tempScore;
+        const letterScore = letter.blank ? 0 : LETTER_SCORES[letter.value];
         score += letterScore;
         switch (sq.reward) {
           case Reward.TW:
@@ -163,8 +168,6 @@ export class WordProcessor {
     if (tw) {
       score *= 3 * tw;
     }
-    if (removeTempData)
-      this.removeTempData(word, startPos, direction);
     return score + extraScore;
   }
 
@@ -376,7 +379,8 @@ export class WordProcessor {
     for (const move of this.legalMoves) {
       console.log(move);
       this.anchor = move.startPos;
-      this.tempWordScore(move.word, move.startPos, move.direction, false);
+      // this.tempWordScore(move.word, move.startPos, move.direction, false);
+      this.focusWord(move.word, move.startPos, move.direction);
       await this.focusAndWait(move.startPos, 2000);
       this.removeTempData(move.word, move.startPos, move.direction);
     }
