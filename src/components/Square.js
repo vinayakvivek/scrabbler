@@ -9,9 +9,13 @@ const Square = ({ pos }) => {
   const data = store.board[pos.x][pos.y];
   const reward = REWARD_TYPES[data.reward];
   const focus = (store.posInFocus.x === pos.x) && (store.posInFocus.y === pos.y) ? 'focus' : '';
+  const wordFocus = !!data.focus ? 'focus' : '';
+
+  const showAnchorData = false;
+  const temp = !!data.tempValue ? 'temp' : '';
 
   return (
-    <div className={`square ${reward} ${focus}`}>
+    <div className={`square ${reward} ${focus} ${wordFocus} ${temp}`}>
       { data.value ? (
           <div>
             <p className="value">{data.value}</p>
@@ -24,7 +28,7 @@ const Square = ({ pos }) => {
               <p className="score">{data.tempScore}</p>
             </div>
           ) : (
-            data.anchorData !== null && (
+            showAnchorData && data.anchorData !== null && (
               <div>
                 <p className="anchor-score">{`${data.anchorData.leftToRight.score} ${data.anchorData.topToBottom.score}`}</p>
                 <p className="anchor-limit">{`${data.anchorData.leftToRight.limit} ${data.anchorData.topToBottom.limit}`}</p>
