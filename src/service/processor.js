@@ -13,16 +13,6 @@ export const Reward = {
   DL: 4
 }
 
-const oppositeDirection = [
-  Direction.LEFT, Direction.RIGHT,
-  Direction.TOP, Direction.BOTTOM
-]
-
-const acrossDirection = [
-  Direction.BOTTOM, Direction.BOTTOM,
-  Direction.RIGHT, Direction.RIGHT
-]
-
 function nextPos(pos, direction) {
   let { x, y } = pos;
   switch (direction) {
@@ -47,6 +37,13 @@ function reverse(s) {
   return [...s].reverse().join('');
 }
 
+class Letter {
+  constructor(value, blank = false) {
+    this.value = value;
+    this.blank = blank;
+  }
+}
+
 export class WordProcessor {
 
   constructor(store, trie) {
@@ -59,23 +56,14 @@ export class WordProcessor {
     this.setFocus(this.anchor);
   }
 
-  async removeFromRack(letter) {
+
+
+  removeFromRack(letter) {
     delete this.rack[letter];
   }
 
-  async insertInRack(letter) {
+  insertInRack(letter) {
     this.rack[letter] = 1;
-  }
-
-  async placeTile(pos, letter) {
-    this.board[pos.x][pos.y].setTile(letter);
-    this.rack.remove(letter);
-  }
-
-  async putBackTile(pos) {
-    const s = this.board[pos.x][pos.y];
-    this.rack.push(s.value);
-    s.removeTile();
   }
 
   async focusAndWait(pos, time = 500) {
@@ -87,7 +75,7 @@ export class WordProcessor {
     return this.board[pos.x][pos.y];
   }
 
-  async partialWordUtil(pos, direction) {
+  partialWordUtil(pos, direction) {
     let score = 0;
     let word = ''
     let currSq = this.square(nextPos(pos, direction));
@@ -99,7 +87,7 @@ export class WordProcessor {
     return { score, word };
   }
 
-  async removeTempData(word, startPos, direction) {
+  removeTempData(word, startPos, direction) {
     let sq = this.square(startPos);
     let n = word.length;
     while (!sq.isBorder && n--) {
@@ -108,7 +96,7 @@ export class WordProcessor {
     }
   }
 
-  async tempWordScore(word, startPos, direction, animate = false, animationDelay = 500) {
+  tempWordScore(word, startPos, direction, removeTempData = true) {
     const letters = [...word];
     let sq = this.square(startPos);
     let [score, extraScore, dw, tw] = [0, 0, 0, 0];
@@ -134,7 +122,6 @@ export class WordProcessor {
                       ? sq.anchorData.topToBottom : sq.anchorData.leftToRight;
           const acrossWord = data.p1 + letter + data.p2;
           if (acrossWord.length > 1) {
-            // TODO: check validity
             switch (sq.reward) {
               case Reward.TW:
                 extraScore += 3 * (data.score + sq.tempScore); break;
@@ -150,7 +137,6 @@ export class WordProcessor {
           }
         }
       }
-      // await this.focusAndWait(sq.pos);
       sq = this.square(nextPos(sq.pos, direction))
     }
     if (dw) {
@@ -159,9 +145,8 @@ export class WordProcessor {
     if (tw) {
       score *= 3 * tw;
     }
-    if (animate) await this.focusAndWait(this.anchor, animationDelay);
-    await this.removeTempData(word, startPos, direction);
-    // console.log(score, extraScore, dw, tw);
+    if (removeTempData)
+      this.removeTempData(word, startPos, direction);
     return score + extraScore;
   }
 
@@ -173,7 +158,7 @@ export class WordProcessor {
     }
   }
 
-  async extendRight(partialWord, node, pos, direction) {
+  extendRight(partialWord, node, pos, direction) {
     const sq = this.square(pos);
     if (sq.isBorder) return;
     if (!sq.value) {
@@ -183,7 +168,7 @@ export class WordProcessor {
           startPos = { x: pos.x, y: pos.y - partialWord.length};
         else
           startPos = { x: pos.x - partialWord.length, y: pos.y}
-        const score = await this.tempWordScore(partialWord, startPos, direction);
+        const score = this.tempWordScore(partialWord, startPos, direction);
         this.legalMoves.push({ word: partialWord, score, startPos, direction });
       }
       for (const e in node.c) {
@@ -194,32 +179,32 @@ export class WordProcessor {
               continue;
           }
           this.removeFromRack(e);
-          await this.extendRight(partialWord + e, node.c[e], nextPos(pos, direction), direction);
+          this.extendRight(partialWord + e, node.c[e], nextPos(pos, direction), direction);
           this.insertInRack(e);
         }
       }
     } else {
       const l = sq.value;
       if (l in node.c) {
-        await this.extendRight(partialWord + l, node.c[l], nextPos(pos, direction), direction)
+        this.extendRight(partialWord + l, node.c[l], nextPos(pos, direction), direction)
       }
     }
   }
 
-  async leftPart(partialWord, node, limit, direction) {
-    await this.extendRight(partialWord, node, this.anchor, direction);
+  leftPart(partialWord, node, limit, direction) {
+    this.extendRight(partialWord, node, this.anchor, direction);
     if (limit > 0) {
       for (const e in node.c) {
         if (e in this.rack) {
           this.removeFromRack(e);
-          await this.leftPart(partialWord + e, node.c[e], limit - 1, direction);
+          this.leftPart(partialWord + e, node.c[e], limit - 1, direction);
           this.insertInRack(e);
         }
       }
     }
   }
 
-  async generateMoves(anchor, direction) {
+  generateMoves(anchor, direction) {
     this.anchor = anchor;
     const sq = this.square(anchor);
 
@@ -227,13 +212,13 @@ export class WordProcessor {
     const data = direction === Direction.RIGHT ? sq.anchorData.leftToRight : sq.anchorData.topToBottom;
     if (data.p1) {
       // trivial left part
-      await this.extendRight(data.p1, this.trie.getWordNode(data.p1), anchor, direction);
+      this.extendRight(data.p1, this.trie.getWordNode(data.p1), anchor, direction);
     } else {
-      await this.leftPart('', this.trie.rootNode, data.limit, direction);
+      this.leftPart('', this.trie.rootNode, data.limit, direction);
     }
   }
 
-  async limit(pos, direction) {
+  limit(pos, direction) {
     let limit = 0;
     let sq = this.square(nextPos(pos, direction));
     while (!sq.value && !sq.anchorData && !sq.isBorder) {
@@ -243,17 +228,17 @@ export class WordProcessor {
     return limit;
   }
 
-  async anchorValue(anchorPos) {
-    const leftPart = await this.partialWordUtil(anchorPos, Direction.LEFT);
-    const rightPart = await this.partialWordUtil(anchorPos, Direction.RIGHT);
-    const topPart = await this.partialWordUtil(anchorPos, Direction.TOP);
-    const bottomPart = await this.partialWordUtil(anchorPos, Direction.BOTTOM);
+  anchorValue(anchorPos) {
+    const leftPart = this.partialWordUtil(anchorPos, Direction.LEFT);
+    const rightPart = this.partialWordUtil(anchorPos, Direction.RIGHT);
+    const topPart = this.partialWordUtil(anchorPos, Direction.TOP);
+    const bottomPart = this.partialWordUtil(anchorPos, Direction.BOTTOM);
 
     const leftToRight = {
       p1: reverse(leftPart.word),
       p2: rightPart.word,
       score: leftPart.score + rightPart.score,
-      limit: await this.limit(anchorPos, Direction.LEFT),
+      limit: this.limit(anchorPos, Direction.LEFT),
       crossList: [],
     }
 
@@ -261,7 +246,7 @@ export class WordProcessor {
       p1: reverse(topPart.word),
       p2: bottomPart.word,
       score: topPart.score + bottomPart.score,
-      limit: await this.limit(anchorPos, Direction.TOP),
+      limit: this.limit(anchorPos, Direction.TOP),
       crossList: [],
     }
 
@@ -280,7 +265,7 @@ export class WordProcessor {
     return { leftToRight, topToBottom };
   }
 
-  async findAnchors() {
+  findAnchors() {
     const b = this.board;
     const [nr, nc] = [b.length, b[0].length];
     const anchors = [];
@@ -291,7 +276,7 @@ export class WordProcessor {
         if (!s.value) {
           if (b[x + 1][y].value || b[x - 1][y].value || b[x][y + 1].value || b[x][y - 1].value) {
             anchors.push({ x, y });
-            s.anchorData = await this.anchorValue({ x, y });
+            s.anchorData = this.anchorValue({ x, y });
           }
         }
       }
@@ -309,19 +294,19 @@ export class WordProcessor {
 
     this.setRack('IVTIIBR');
 
-    const anchors = await this.findAnchors();
+    const anchors = this.findAnchors();
 
     if (!anchors.length) {
       // starting position
       const centerPos = {x: 8, y: 8};
-      this.square(centerPos).anchorData = await this.anchorValue(centerPos);
+      this.square(centerPos).anchorData = this.anchorValue(centerPos);
       anchors.push(centerPos);
     }
 
     this.legalMoves = [];
     for (const anchor of anchors) {
-      await this.generateMoves(anchor, Direction.BOTTOM);
-      await this.generateMoves(anchor, Direction.RIGHT);
+      this.generateMoves(anchor, Direction.BOTTOM);
+      this.generateMoves(anchor, Direction.RIGHT);
       this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
       this.legalMoves = this.legalMoves.slice(0, 50);
     }
@@ -330,7 +315,9 @@ export class WordProcessor {
     for (const move of this.legalMoves) {
       console.log(move);
       this.anchor = move.startPos;
-      await this.tempWordScore(move.word, move.startPos, move.direction, true, 5000);
+      this.tempWordScore(move.word, move.startPos, move.direction, false);
+      await this.focusAndWait(move.startPos, 2000);
+      this.removeTempData(move.word, move.startPos, move.direction);
     }
     console.log(this.trie.rootNode);
   }
