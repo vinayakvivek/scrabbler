@@ -23,7 +23,8 @@ export class Square {
   }
 
   setTile(value, score) {
-    this.score = score || LETTER_SCORES[value];
+    if (score === undefined) score = LETTER_SCORES[value];
+    this.score = score;
     this.value = value;
   }
 
@@ -33,7 +34,8 @@ export class Square {
   }
 
   setTempTile(value, score) {
-    this.tempScore = score || LETTER_SCORES[value];
+    if (score === undefined) score = LETTER_SCORES[value];
+    this.tempScore = score;
     this.tempValue = value;
   }
 
