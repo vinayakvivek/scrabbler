@@ -108,7 +108,7 @@ export class WordProcessor {
     }
   }
 
-  async tempWordScore(word, startPos, direction, animate = false) {
+  async tempWordScore(word, startPos, direction, animate = false, animationDelay = 500) {
     const letters = [...word];
     let sq = this.square(startPos);
     let [score, extraScore, dw, tw] = [0, 0, 0, 0];
@@ -159,7 +159,7 @@ export class WordProcessor {
     if (tw) {
       score *= 3 * tw;
     }
-    if (animate) await this.focusAndWait(this.anchor, 1000);
+    if (animate) await this.focusAndWait(this.anchor, animationDelay);
     await this.removeTempData(word, startPos, direction);
     // console.log(score, extraScore, dw, tw);
     return score + extraScore;
@@ -307,7 +307,7 @@ export class WordProcessor {
 
   async generateWords() {
 
-    this.setRack('SGDLOLS');
+    this.setRack('IVTIIBR');
 
     const anchors = await this.findAnchors();
 
@@ -328,8 +328,9 @@ export class WordProcessor {
 
 
     for (const move of this.legalMoves) {
-      // await this.tempWordScore(move.word, move.startPos, move.direction, true);
       console.log(move);
+      this.anchor = move.startPos;
+      await this.tempWordScore(move.word, move.startPos, move.direction, true, 5000);
     }
     console.log(this.trie.rootNode);
   }
