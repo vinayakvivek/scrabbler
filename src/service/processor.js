@@ -1,3 +1,4 @@
+import { LETTER_SCORES } from './square';
 
 export const Direction = {
   RIGHT: 0,
@@ -51,19 +52,25 @@ export class WordProcessor {
     this.board = store.board;
     this.setFocus = store.setFocus;
     this.trie = trie;
-    this.rack = {};
+    this.rack = [];
     this.anchor = { x: 9, y: 8 }
     this.setFocus(this.anchor);
   }
 
-
-
-  removeFromRack(letter) {
-    delete this.rack[letter];
+  getFromRack(l) {
+    return this.rack.find(x => x.value === l) || this.rack.find(x => x.blank);
   }
 
   insertInRack(letter) {
-    this.rack[letter] = 1;
+    this.rack.push(letter);
+  }
+
+  removeFromRack(letter) {
+    if (letter.blank) {
+      this.rack.splice(this.rack.findIndex(x => x.blank), 1);
+    } else {
+      this.rack.splice(this.rack.findIndex(x => !x.blank && x.value === letter.value), 1);
+    }
   }
 
   async focusAndWait(pos, time = 500) {
@@ -96,43 +103,54 @@ export class WordProcessor {
     }
   }
 
+  /**
+   *
+   * @param {*} word Array of Letter
+   * @param {*} startPos
+   * @param {*} direction
+   * @param {*} removeTempData
+   */
   tempWordScore(word, startPos, direction, removeTempData = true) {
-    const letters = [...word];
     let sq = this.square(startPos);
     let [score, extraScore, dw, tw] = [0, 0, 0, 0];
-    for (const letter of letters) {
+    for (const letter of word) {
       if (sq.value) {
         score += sq.score;
       } else {
-        sq.setTempTile(letter);
-        score += sq.tempScore;
+        if (letter.blank) {
+          sq.setTempTile(letter.value, 0);
+        } else {
+          sq.setTempTile(letter.value);
+        }
+        const letterScore = sq.tempScore;
+        score += letterScore;
         switch (sq.reward) {
           case Reward.TW:
             tw++; break;
           case Reward.TL:
-            score += 2 * sq.tempScore; break;
+            score += 2 * letterScore; break;
           case Reward.DW:
             dw++; break;
           case Reward.DL:
-            score += sq.tempScore; break;
+            score += letterScore; break;
           default:
         }
         if (sq.anchorData) {
           let data = direction === Direction.RIGHT || direction === Direction.LEFT
                       ? sq.anchorData.topToBottom : sq.anchorData.leftToRight;
-          const acrossWord = data.p1 + letter + data.p2;
+          const acrossWord = data.p1 + letter.value + data.p2;
           if (acrossWord.length > 1) {
             switch (sq.reward) {
               case Reward.TW:
-                extraScore += 3 * (data.score + sq.tempScore); break;
+                extraScore += 3 * (data.score + letterScore); break;
               case Reward.TL:
-                extraScore += (data.score + 3 * sq.tempScore); break;
+                extraScore += (data.score + 3 * letterScore); break;
               case Reward.DW:
-                extraScore += 2 * (data.score + sq.tempScore); break;
+                extraScore += 2 * (data.score + letterScore); break;
               case Reward.DL:
-                extraScore += (data.score + 2 * sq.tempScore); break;
+                extraScore += (data.score + 2 * letterScore); break;
               default:
-                extraScore += (data.score + sq.tempScore);
+                extraScore += (data.score + letterScore);
             }
           }
         }
@@ -162,31 +180,38 @@ export class WordProcessor {
     const sq = this.square(pos);
     if (sq.isBorder) return;
     if (!sq.value) {
-      if (node.t && this.checkPositionValidity(pos, direction) && partialWord) {
+      if (node.t && this.checkPositionValidity(pos, direction) && partialWord.length) {
         let startPos;
         if (direction === Direction.RIGHT)
           startPos = { x: pos.x, y: pos.y - partialWord.length};
         else
           startPos = { x: pos.x - partialWord.length, y: pos.y}
         const score = this.tempWordScore(partialWord, startPos, direction);
-        this.legalMoves.push({ word: partialWord, score, startPos, direction });
+        this.legalMoves.push({ word: partialWord.map(x => ({...x})), score, startPos, direction });
       }
       for (const e in node.c) {
-        if (e in this.rack) {
+        const letter = this.getFromRack(e);
+        if (letter) {
           if (sq.anchorData) {
             const crossList = direction === Direction.RIGHT ? sq.anchorData.topToBottom.crossList : sq.anchorData.leftToRight.crossList;
-            if (!crossList.includes(e))
+            if (!crossList.includes(e)) {
               continue;
+            }
           }
-          this.removeFromRack(e);
-          this.extendRight(partialWord + e, node.c[e], nextPos(pos, direction), direction);
-          this.insertInRack(e);
+          letter.value = e;
+          this.removeFromRack(letter);
+          partialWord.push(letter);
+          this.extendRight(partialWord, node.c[e], nextPos(pos, direction), direction);
+          partialWord.pop();
+          this.insertInRack(letter);
         }
       }
     } else {
       const l = sq.value;
       if (l in node.c) {
-        this.extendRight(partialWord + l, node.c[l], nextPos(pos, direction), direction)
+        partialWord.push(new Letter(l));
+        this.extendRight(partialWord, node.c[l], nextPos(pos, direction), direction)
+        partialWord.pop();
       }
     }
   }
@@ -195,13 +220,21 @@ export class WordProcessor {
     this.extendRight(partialWord, node, this.anchor, direction);
     if (limit > 0) {
       for (const e in node.c) {
-        if (e in this.rack) {
-          this.removeFromRack(e);
-          this.leftPart(partialWord + e, node.c[e], limit - 1, direction);
-          this.insertInRack(e);
+        const letter = this.getFromRack(e);
+        if (letter) {
+          letter.value = e;
+          this.removeFromRack(letter);
+          partialWord.push(letter)
+          this.leftPart(partialWord, node.c[e], limit - 1, direction);
+          partialWord.pop();
+          this.insertInRack(letter);
         }
       }
     }
+  }
+
+  wordToArray(word) {
+    return [...word].map(x => new Letter(x));
   }
 
   generateMoves(anchor, direction) {
@@ -210,11 +243,12 @@ export class WordProcessor {
 
     // left to right
     const data = direction === Direction.RIGHT ? sq.anchorData.leftToRight : sq.anchorData.topToBottom;
-    if (data.p1) {
+    const leftPart = data.p1;
+    if (leftPart) {
       // trivial left part
-      this.extendRight(data.p1, this.trie.getWordNode(data.p1), anchor, direction);
+      this.extendRight(this.wordToArray(leftPart), this.trie.getWordNode(leftPart), anchor, direction);
     } else {
-      this.leftPart('', this.trie.rootNode, data.limit, direction);
+      this.leftPart([], this.trie.rootNode, data.limit, direction);
     }
   }
 
@@ -251,13 +285,40 @@ export class WordProcessor {
     }
 
     if (this.trie) {
+
       // populate cross-check list
-      for (const letter in this.rack) {
-        if (this.trie.isWordValid(leftToRight.p1 + letter + leftToRight.p2)) {
-          leftToRight.crossList.push(letter);
+
+      if (!(leftToRight.p1 + leftToRight.p2)) {
+        for (const l in LETTER_SCORES) {
+          leftToRight.crossList.push(l);
         }
-        if (this.trie.isWordValid(topToBottom.p1 + letter + topToBottom.p2)) {
-          topToBottom.crossList.push(letter);
+      }
+
+      if (!(topToBottom.p1 + topToBottom.p2)) {
+        for (const l in LETTER_SCORES) {
+          topToBottom.crossList.push(l);
+        }
+      }
+
+      const rackHasBlank = !!this.rack.find(x => x.blank);
+      if (rackHasBlank) {
+        for (const l in LETTER_SCORES) {
+          if (this.trie.isWordValid(leftToRight.p1 + l + leftToRight.p2)) {
+            leftToRight.crossList.push(l);
+          }
+          if (this.trie.isWordValid(topToBottom.p1 + l + topToBottom.p2)) {
+            topToBottom.crossList.push(l);
+          }
+        }
+      } else {
+        const rackLetters = this.rack.map(x => x.value);
+        for (const l of rackLetters) {
+          if (this.trie.isWordValid(leftToRight.p1 + l + leftToRight.p2)) {
+            leftToRight.crossList.push(l);
+          }
+          if (this.trie.isWordValid(topToBottom.p1 + l + topToBottom.p2)) {
+            topToBottom.crossList.push(l);
+          }
         }
       }
     }
@@ -286,13 +347,14 @@ export class WordProcessor {
 
   setRack(letters) {
     [...letters].forEach(l => {
-      this.insertInRack(l);
+      this.insertInRack(new Letter(l));
     })
   }
 
   async generateWords() {
 
     this.setRack('IVTIIBR');
+    // this.insertInRack(new Letter('', true))
 
     const anchors = this.findAnchors();
 
@@ -308,9 +370,8 @@ export class WordProcessor {
       this.generateMoves(anchor, Direction.BOTTOM);
       this.generateMoves(anchor, Direction.RIGHT);
       this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
-      this.legalMoves = this.legalMoves.slice(0, 50);
+      this.legalMoves = this.legalMoves.slice(0, 10);
     }
-
 
     for (const move of this.legalMoves) {
       console.log(move);
@@ -319,7 +380,6 @@ export class WordProcessor {
       await this.focusAndWait(move.startPos, 2000);
       this.removeTempData(move.word, move.startPos, move.direction);
     }
-    console.log(this.trie.rootNode);
   }
 
 }
