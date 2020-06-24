@@ -53,7 +53,7 @@ export class WordProcessor {
     this.board = store.board;
     this.setFocus = store.setFocus;
     this.trie = trie;
-    this.rack = [];
+    this.rack = store.rack;
     this.anchor = { x: 9, y: 8 }
     this.setFocus(this.anchor);
   }
@@ -356,7 +356,7 @@ export class WordProcessor {
 
   async generateWords() {
 
-    this.setRack('IVTIIBR');
+    this.setRack('RLAXTES');
     // this.insertInRack(new Letter('', true))
 
     const anchors = this.findAnchors();
@@ -381,7 +381,7 @@ export class WordProcessor {
       this.anchor = move.startPos;
       // this.tempWordScore(move.word, move.startPos, move.direction, false);
       this.focusWord(move.word, move.startPos, move.direction);
-      await this.focusAndWait(move.startPos, 2000);
+      await this.focusAndWait(move.startPos, 5000);
       this.removeTempData(move.word, move.startPos, move.direction);
     }
   }
