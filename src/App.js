@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import Board from './components/Board';
 import { StoreProvider } from './store';
+import Rack from './components/Rack';
 
 function App() {
   return (
@@ -9,6 +10,9 @@ function App() {
       <h1>Scrabble</h1>
       <StoreProvider>
         <Board/>
+        <br/>
+        <hr/>
+        <Rack/>
       </StoreProvider>
     </div>
   );

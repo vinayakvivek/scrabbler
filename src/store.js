@@ -10,6 +10,7 @@ export const StoreProvider = ({ children }) => {
     size: { numRows: 15, numCols: 15 },
     board: {},
     posInFocus: { x: 1, y: 1 },
+    rack: [],
     setFocus: (pos) => {
       store.posInFocus = pos;
     },
