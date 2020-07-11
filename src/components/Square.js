@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { REWARD_TYPES } from '../service/square'
 import { observer } from "mobx-react";
 import { useStore } from '../store'
