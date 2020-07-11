@@ -1,5 +1,4 @@
 import { LETTER_SCORES } from './square';
-import { scryRenderedDOMComponentsWithClass } from 'react-dom/test-utils';
 
 export const Direction = {
   RIGHT: 0,
@@ -348,16 +347,14 @@ export class WordProcessor {
     return anchors;
   }
 
-  setRack(letters) {
+  setRack(letters, numBlanks = 0) {
     [...letters].forEach(l => {
       this.insertInRack(new Letter(l));
     })
+    while (numBlanks--) this.insertInRack(new Letter('', true));
   }
 
   async generateWords() {
-
-    this.setRack('RLAXTES');
-    // this.insertInRack(new Letter('', true))
 
     const anchors = this.findAnchors();
 

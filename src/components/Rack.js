@@ -11,10 +11,11 @@ const Rack = () => {
     const tiles = [];
     for (const letter of rack) {
       const score = letter.blank ? 0 : LETTER_SCORES[letter.value];
+      const value = letter.blank ? '' : letter.value;
       tiles.push(
-        <div className={`square`}>
+        <div className={`square`} key={tiles.length}>
           <div>
-            <p className="value">{letter.value}</p>
+            <p className="value">{value}</p>
             <p className="score">{score}</p>
           </div>
         </div>

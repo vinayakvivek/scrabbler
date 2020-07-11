@@ -1,8 +1,8 @@
 import data from './word-trie-caps.json';
-import boardData from './boards/game2.json';
+import boardData from './boards/game7.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';
-import { WordProcessor, Direction } from './processor'
+import { WordProcessor } from './processor'
 
 
 function readNode(obj, parentNode) {
@@ -52,7 +52,7 @@ export const init = (store) => {
   const trie = createTrie();
   store.board = createBoard();
   const processor = new WordProcessor(store, trie);
+  processor.setRack(boardData.rack.tiles, boardData.rack.numBlanks);
   processor.generateWords();
-  // processor.wordScore({ x: 8, y: 8 }, Direction.RIGHT);
 }
 
