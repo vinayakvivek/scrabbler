@@ -79,3 +79,12 @@
 .row {
   clear: left;
 }
+
+.App {
+  padding: 30px;
+}
+
+.controls-container {
+  float: right;
+  width: 50%;
+}

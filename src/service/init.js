@@ -1,4 +1,4 @@
-import data from './word-trie-caps.json';
+// import data from './word-trie-caps.json';
 import boardData from './boards/game7.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';
@@ -17,7 +17,7 @@ function readNode(obj, parentNode) {
 const createTrie = () => {
   const trie = new Trie();
   console.time('read-trie')
-  readNode(data, trie.rootNode);
+  // readNode(data, trie.rootNode);
   console.timeEnd('read-trie');
   console.log(trie.isWordValid('ALACK'))
   return trie;
@@ -49,10 +49,10 @@ const createBoard = () => {
 }
 
 export const init = (store) => {
-  const trie = createTrie();
+  // const trie = createTrie();
   store.board = createBoard();
-  const processor = new WordProcessor(store, trie);
-  processor.setRack(boardData.rack.tiles, boardData.rack.numBlanks);
-  processor.generateWords();
+  // const processor = new WordProcessor(store, trie);
+  // processor.setRack(boardData.rack.tiles, boardData.rack.numBlanks);
+  // processor.generateWords();
 }
 
