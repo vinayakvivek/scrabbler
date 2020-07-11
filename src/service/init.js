@@ -1,5 +1,5 @@
 // import data from './word-trie-caps.json';
-import boardData from './boards/game7.json';
+import boardData from './boards/empty.json';
 import { Trie, TrieNode } from './trie';
 import { Square } from './square';
 import { WordProcessor } from './processor'

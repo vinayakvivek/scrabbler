@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { useStore } from '../../store';
-import { resetBoard } from '../../service/utils';
+import { resetBoard, state, syncState } from '../../service/utils';
 
 const Controls = () => {
 
@@ -27,16 +27,35 @@ const Controls = () => {
     handleFileChosen(e.target.files[0]);
   }
 
+  const handleDownload = async () => {
+    syncState(store);
+    const fileName = "scrabble-state";
+    const json = JSON.stringify(state);
+    const blob = new Blob([json],{type:'application/json'});
+    const href = await URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName + ".json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <div className="controls-container">
       <h3>Controls</h3>
-      <label>
-        Select a state file:
-        <input
-          type="file"
-          onChange={handleFiles}
-        />
-      </label>
+      <div>
+        <label>
+          Select a state file:
+          <input
+            type="file"
+            onChange={handleFiles}
+          />
+        </label>
+      </div>
+      <div>
+        { !!store.status && <button onClick={handleDownload}>Download</button> }
+      </div>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 import { Square }  from './square';
 
+export let state;
+
 export class Letter {
   constructor(value, blank = false) {
     this.value = value;
@@ -41,7 +43,27 @@ export const createBoard = (boardData) => {
   return board;
 }
 
+export const syncState = (store) => {
+  const [numRows, numCols] = state.size;
+  for (let i = 0; i < numRows; ++i) {
+    for (let j = 0; j < numCols; ++j) {
+      const value = store.board[i + 1][j + 1].value || 'x';
+      state.tiles[i][j] = value;
+    }
+  }
+  let numBlanks = 0;
+  let letters = '';
+  for (const i in store.rack) {
+    if (store.rack[i].blank) numBlanks++;
+    else letters += store.rack[i].value;
+  }
+  state.rack.tiles = letters;
+  state.rack.numBlanks = numBlanks;
+}
+
 export const resetBoard = (store, boardData) => {
+  state = {...boardData};
   store.board = createBoard(boardData);
   store.rack = createRack(boardData.rack.tiles, boardData.rack.numBlanks);
+  store.status = 1;
 }
