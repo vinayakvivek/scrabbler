@@ -10,6 +10,7 @@ const Controls = () => {
   const store = useStore();
   const [word, setWord] = useState('');
   const [direction, setDirection] = useState(0);
+  const [wordBlankPos, setWordBlankPos] = useState([]);
   const [rack, setRack] = useState('');
   const [rackBlanks, setRackBlanks] = useState(0);
 
@@ -52,9 +53,14 @@ const Controls = () => {
 
   const placeWord = () => {
     if (!word) return;
-    const wordArray = [...word].map(l => new Letter(l.toUpperCase()));
-    processor.placeWord(wordArray, store.posInFocus, direction);
-    store.posInFocus = {x: 1, y: 1};
+    try {
+      const wordArray = [...word].map(l => new Letter(l.toUpperCase()));
+      wordBlankPos.forEach(i => wordArray[parseInt(i)].blank = true);
+      processor.placeWord(wordArray, store.posInFocus, direction);
+      store.posInFocus = {x: 1, y: 1};
+    } catch (err) {
+      console.log(err.message);
+    }
   }
 
   const placeRack = () => {
@@ -93,12 +99,19 @@ const Controls = () => {
         </select>
         <input type='text' value={word} onChange={(e) => setWord(e.target.value)}></input>
         <br/>
+        <label>Blank positions</label>
+        <input type='text' value={wordBlankPos.join(',')} onChange={(e) => setWordBlankPos(e.target.value.split(','))}></input>
+        <br/>
         <button onClick={placeWord}>Add word</button>
       </div>
       <div className="set-rack-container">
         <h3>Set rack</h3>
+        <label>Rack tiles</label>
         <input type='text' value={rack} onChange={(e) => setRack(e.target.value)}></input>
+        <br/>
+        <label>#blanks</label>
         <input type='number' value={rackBlanks} onChange={(e) => setRackBlanks(e.target.value)}></input>
+        <br/>
         <button onClick={placeRack}>Set rack tiles</button>
       </div>
     </div>

@@ -19,8 +19,21 @@ const Square = ({ pos }) => {
     store.posInFocus = pos
   }
 
+  const handleDoubleClick = (e) => {
+    try {
+      store.board[pos.x][pos.y].removeTile();
+      handleClick();
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
   return (
-    <div className={`square ${reward} ${focus} ${wordFocus} ${temp}`} onClick={handleClick}>
+    <div
+      className={`square ${reward} ${focus} ${wordFocus} ${temp}`}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+    >
       { data.value ? (
           <div>
             <p className="value">{data.value}</p>
