@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react';
 import { useStore } from '../../store';
-import { resetBoard, state, syncState, processor, Direction, Letter } from '../../service/utils';
+import { resetBoard, state, syncState, processor, Direction, Letter, Reward } from '../../service/utils';
 import Move from './Move';
 
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { REWARD_TYPES } from '../service/square'
 import { observer } from "mobx-react";
 import { useStore } from '../store'
+import { processor } from '../service/utils';
 
 
 const Square = ({ pos }) => {
@@ -17,6 +18,7 @@ const Square = ({ pos }) => {
 
   const handleClick = (e) => {
     store.posInFocus = pos
+    processor.removeAllTempData();
   }
 
   const handleDoubleClick = (e) => {

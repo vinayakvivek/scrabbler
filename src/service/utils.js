@@ -12,6 +12,7 @@ export const Direction = {
 }
 
 export const Reward = {
+  NA: 0,
   TW: 1,
   TL: 2,
   DW: 3,
@@ -80,8 +81,9 @@ export const syncState = (store) => {
   const [numRows, numCols] = state.size;
   for (let i = 0; i < numRows; ++i) {
     for (let j = 0; j < numCols; ++j) {
-      const value = store.board[i + 1][j + 1].value || 'x';
-      state.tiles[i][j] = value;
+      const sq = store.board[i + 1][j + 1];
+      state.tiles[i][j] = sq.value || 'x';
+      state.squares[i][j] = sq.reward;
     }
   }
   let numBlanks = 0;
