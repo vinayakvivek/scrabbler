@@ -88,3 +88,27 @@
   float: right;
   width: 50%;
 }
+
+.moves-container {
+  float: left;
+}
+
+.move-wrapper {
+  background-color: rgb(226, 222, 222);
+  width: fit-content;
+  border: solid 1px;
+  float: left;
+  margin: 10px 10px 0 0;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.move-wrapper > p {
+  padding: 0;
+  margin: 0;
+}
+
+
+.move-wrapper:hover, .move-wrapper > p:hover {
+  cursor: pointer;
+}

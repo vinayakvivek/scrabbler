@@ -14,25 +14,23 @@ export class WordProcessor {
 
   constructor(store) {
     this.store = store;
-    this.board = store.board;
     this.setFocus = store.setFocus;
     this.trie = createTrie();
-    this.rack = store.rack;
   }
 
   getFromRack(l) {
-    return this.rack.find(x => x.value === l) || this.rack.find(x => x.blank);
+    return this.store.rack.find(x => x.value === l) || this.store.rack.find(x => x.blank);
   }
 
   insertInRack(letter) {
-    this.rack.push(letter);
+    this.store.rack.push(letter);
   }
 
   removeFromRack(letter) {
     if (letter.blank) {
-      this.rack.splice(this.rack.findIndex(x => x.blank), 1);
+      this.store.rack.splice(this.store.rack.findIndex(x => x.blank), 1);
     } else {
-      this.rack.splice(this.rack.findIndex(x => !x.blank && x.value === letter.value), 1);
+      this.store.rack.splice(this.store.rack.findIndex(x => !x.blank && x.value === letter.value), 1);
     }
   }
 
@@ -42,7 +40,7 @@ export class WordProcessor {
   }
 
   square(pos) {
-    return this.board[pos.x][pos.y];
+    return this.store.board[pos.x][pos.y];
   }
 
   placeWord(word, startPos, direction) {
@@ -85,6 +83,18 @@ export class WordProcessor {
       currSq = this.square(nextPos(currSq.pos, direction));
     }
     return { score, word };
+  }
+
+  removeAllTempData() {
+    const b = this.store.board;
+    const [nr, nc] = [b.length, b[0].length];
+    for (let x = 1; x < nr - 1; ++x) {
+      for (let y = 1; y < nc - 1; ++y) {
+        const sq = b[x][y];
+        sq.removeTempTile();
+        sq.focus = false;
+      }
+    }
   }
 
   removeTempData(word, startPos, direction) {
@@ -280,7 +290,7 @@ export class WordProcessor {
         }
       }
 
-      const rackHasBlank = !!this.rack.find(x => x.blank);
+      const rackHasBlank = !!this.store.rack.find(x => x.blank);
       if (rackHasBlank) {
         for (const l in LETTER_SCORES) {
           if (this.trie.isWordValid(leftToRight.p1 + l + leftToRight.p2)) {
@@ -291,7 +301,7 @@ export class WordProcessor {
           }
         }
       } else {
-        const rackLetters = this.rack.map(x => x.value);
+        const rackLetters = this.store.rack.map(x => x.value);
         for (const l of rackLetters) {
           if (this.trie.isWordValid(leftToRight.p1 + l + leftToRight.p2)) {
             leftToRight.crossList.push(l);
@@ -307,7 +317,7 @@ export class WordProcessor {
   }
 
   findAnchors() {
-    const b = this.board;
+    const b = this.store.board;
     const [nr, nc] = [b.length, b[0].length];
     const anchors = [];
     for (let x = 1; x < nr - 1; ++x) {
@@ -332,7 +342,7 @@ export class WordProcessor {
     while (numBlanks--) this.insertInRack(new Letter('', true));
   }
 
-  async generateWords() {
+  async generateWords(maxCount = 50) {
 
     const anchors = this.findAnchors();
 
@@ -348,17 +358,18 @@ export class WordProcessor {
       this.generateMoves(anchor, Direction.BOTTOM);
       this.generateMoves(anchor, Direction.RIGHT);
       this.legalMoves.sort((a, b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
-      this.legalMoves = this.legalMoves.slice(0, 10);
+      this.legalMoves = this.legalMoves.slice(0, maxCount);
     }
 
-    for (const move of this.legalMoves) {
-      console.log(move);
-      this.anchor = move.startPos;
-      // this.tempWordScore(move.word, move.startPos, move.direction, false);
-      this.focusWord(move.word, move.startPos, move.direction);
-      await this.focusAndWait(move.startPos, 5000);
-      this.removeTempData(move.word, move.startPos, move.direction);
-    }
+    // for (const move of this.legalMoves) {
+    //   console.log(move);
+    //   this.anchor = move.startPos;
+    //   // this.tempWordScore(move.word, move.startPos, move.direction, false);
+    //   this.focusWord(move.word, move.startPos, move.direction);
+    //   await this.focusAndWait(move.startPos, 5000);
+    //   this.removeTempData(move.word, move.startPos, move.direction);
+    // }
+    return this.legalMoves;
   }
 
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react';
 import { useStore } from '../../store';
 import { resetBoard, state, syncState, processor, Direction, Letter } from '../../service/utils';
+import Move from './Move';
 
 
 const Controls = () => {
@@ -13,6 +14,7 @@ const Controls = () => {
   const [wordBlankPos, setWordBlankPos] = useState([]);
   const [rack, setRack] = useState('');
   const [rackBlanks, setRackBlanks] = useState(0);
+  const [moves, setMoves] = useState([]);
 
   const handleFileRead = () => {
     try {
@@ -72,6 +74,10 @@ const Controls = () => {
     store.posInFocus = {x: 1, y: 1};
   }
 
+  const generateMoves = async () => {
+    setMoves(await processor.generateWords());
+  }
+
   return (
     <div className="controls-container">
       <h2>Controls</h2>
@@ -113,6 +119,12 @@ const Controls = () => {
         <input type='number' value={rackBlanks} onChange={(e) => setRackBlanks(e.target.value)}></input>
         <br/>
         <button onClick={placeRack}>Set rack tiles</button>
+      </div>
+      <div className='moves-container'>
+        <h3>Moves</h3>
+        <button onClick={generateMoves}>Generate next legal moves</button>
+        <br/>
+        { moves.map(move => <Move data={move} />) }
       </div>
     </div>
   )

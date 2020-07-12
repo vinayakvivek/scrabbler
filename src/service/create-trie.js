@@ -1,4 +1,4 @@
-// import data from './word-trie-caps.json';
+import data from './word-trie-caps.json';
 import { Trie, TrieNode } from './trie';
 
 function readNode(obj, parentNode) {
@@ -13,7 +13,7 @@ function readNode(obj, parentNode) {
 export const createTrie = () => {
   const trie = new Trie();
   console.time('read-trie')
-  // readNode(data, trie.rootNode);
+  readNode(data, trie.rootNode);
   console.timeEnd('read-trie');
   console.log(trie.isWordValid('ALACK'))
   return trie;
