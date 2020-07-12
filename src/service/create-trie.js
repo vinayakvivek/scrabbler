@@ -19,3 +19,4 @@ export const createTrie = () => {
   return trie;
 }
 
+export const wordTrie = createTrie();

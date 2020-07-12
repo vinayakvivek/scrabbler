@@ -1,6 +1,6 @@
 import { LETTER_SCORES } from './square';
 import { Letter, Direction, Reward, nextPos } from './utils';
-import { createTrie } from './create-trie';
+import { wordTrie } from './create-trie';
 
 function timer(ms) {
   return new Promise(res => setTimeout(res, ms));
@@ -15,7 +15,7 @@ export class WordProcessor {
   constructor(store) {
     this.store = store;
     this.setFocus = store.setFocus;
-    this.trie = createTrie();
+    this.trie = wordTrie;
   }
 
   getFromRack(l) {

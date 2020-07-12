@@ -78,6 +78,14 @@ const Controls = () => {
     setMoves(await processor.generateWords());
   }
 
+  const renderMoves = () => {
+    const moveList = [];
+    for (const i in moves) {
+      moveList.push(<Move data={moves[i]} key={i}/>)
+    }
+    return moveList;
+  }
+
   return (
     <div className="controls-container">
       <h2>Controls</h2>
@@ -124,7 +132,7 @@ const Controls = () => {
         <h3>Moves</h3>
         <button onClick={generateMoves}>Generate next legal moves</button>
         <br/>
-        { moves.map(move => <Move data={move} />) }
+        { renderMoves() }
       </div>
     </div>
   )
