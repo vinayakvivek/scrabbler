@@ -1,34 +1,6 @@
 import { LETTER_SCORES } from './square';
-
-export const Direction = {
-  RIGHT: 0,
-  LEFT: 1,
-  BOTTOM: 2,
-  TOP: 3
-}
-
-export const Reward = {
-  TW: 1,
-  TL: 2,
-  DW: 3,
-  DL: 4
-}
-
-function nextPos(pos, direction) {
-  let { x, y } = pos;
-  switch (direction) {
-    case Direction.RIGHT:
-      y++; break;
-    case Direction.LEFT:
-      y--; break;
-    case Direction.BOTTOM:
-      x++; break;
-    case Direction.TOP:
-      x--; break;
-    default:
-  }
-  return { x, y }
-}
+import { Letter, Direction, Reward, nextPos } from './utils';
+import { createTrie } from './create-trie';
 
 function timer(ms) {
   return new Promise(res => setTimeout(res, ms));
@@ -38,23 +10,14 @@ function reverse(s) {
   return [...s].reverse().join('');
 }
 
-class Letter {
-  constructor(value, blank = false) {
-    this.value = value;
-    this.blank = blank;
-  }
-}
-
 export class WordProcessor {
 
-  constructor(store, trie) {
+  constructor(store) {
     this.store = store;
     this.board = store.board;
     this.setFocus = store.setFocus;
-    this.trie = trie;
+    this.trie = createTrie();
     this.rack = store.rack;
-    this.anchor = { x: 9, y: 8 }
-    this.setFocus(this.anchor);
   }
 
   getFromRack(l) {
@@ -80,6 +43,21 @@ export class WordProcessor {
 
   square(pos) {
     return this.board[pos.x][pos.y];
+  }
+
+  placeWord(word, startPos, direction) {
+    let sq = this.square(startPos);
+    for (const letter of word) {
+      if (!sq.value) {
+        if (letter.blank) {
+          sq.setTile(letter.value, 0);
+        } else {
+          sq.setTile(letter.value);
+        }
+      }
+      sq = this.square(nextPos(sq.pos, direction))
+      if (sq.isBorder) break;
+    }
   }
 
   focusWord(word, startPos, direction) {

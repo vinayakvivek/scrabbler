@@ -1,6 +1,39 @@
 import { Square }  from './square';
+import { WordProcessor } from './processor';
 
 export let state;
+export let processor;
+
+export const Direction = {
+  RIGHT: 0,
+  LEFT: 1,
+  BOTTOM: 2,
+  TOP: 3
+}
+
+export const Reward = {
+  TW: 1,
+  TL: 2,
+  DW: 3,
+  DL: 4
+}
+
+export function nextPos(pos, direction) {
+  let { x, y } = pos;
+  switch (direction) {
+    case Direction.RIGHT:
+      y++; break;
+    case Direction.LEFT:
+      y--; break;
+    case Direction.BOTTOM:
+      x++; break;
+    case Direction.TOP:
+      x--; break;
+    default:
+  }
+  return { x, y }
+}
+
 
 export class Letter {
   constructor(value, blank = false) {
@@ -65,5 +98,6 @@ export const resetBoard = (store, boardData) => {
   state = {...boardData};
   store.board = createBoard(boardData);
   store.rack = createRack(boardData.rack.tiles, boardData.rack.numBlanks);
+  processor = new WordProcessor(store);
   store.status = 1;
 }

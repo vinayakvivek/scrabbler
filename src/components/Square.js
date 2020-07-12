@@ -3,6 +3,7 @@ import { REWARD_TYPES } from '../service/square'
 import { observer } from "mobx-react";
 import { useStore } from '../store'
 
+
 const Square = ({ pos }) => {
 
   const store = useStore();
@@ -14,8 +15,12 @@ const Square = ({ pos }) => {
   const showAnchorData = false;
   const temp = !!data.tempValue ? 'temp' : '';
 
+  const handleClick = (e) => {
+    store.posInFocus = pos
+  }
+
   return (
-    <div className={`square ${reward} ${focus} ${wordFocus} ${temp}`}>
+    <div className={`square ${reward} ${focus} ${wordFocus} ${temp}`} onClick={handleClick}>
       { data.value ? (
           <div>
             <p className="value">{data.value}</p>
