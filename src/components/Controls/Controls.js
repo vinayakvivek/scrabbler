@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react';
 import { useStore } from '../../store';
-import { resetBoard, state, syncState, processor, Direction, Letter, Reward } from '../../service/utils';
+import { resetBoard, state, syncState, processor, Direction, Letter } from '../../service/utils';
 import Move from './Move';
+import UpdateRewards from './UpdateRewards';
 
 
 const Controls = () => {
@@ -101,6 +102,7 @@ const Controls = () => {
       <div>
         { !!store.status && <button onClick={handleDownload}>Download</button> }
       </div>
+      <UpdateRewards/>
       <div className="add-word-container">
         <h3>Add word</h3>
         <label>Start position</label>

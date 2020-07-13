@@ -79,10 +79,14 @@ export const createBoard = (boardData) => {
 
 export const syncState = (store) => {
   const [numRows, numCols] = state.size;
+  const blanks = [];
   for (let i = 0; i < numRows; ++i) {
     for (let j = 0; j < numCols; ++j) {
       const sq = store.board[i + 1][j + 1];
       state.tiles[i][j] = sq.value || 'x';
+      if (!!sq.value && sq.score === 0) {
+        blanks.push([i + 1, j + 1]);
+      }
       state.squares[i][j] = sq.reward;
     }
   }
@@ -92,6 +96,7 @@ export const syncState = (store) => {
     if (store.rack[i].blank) numBlanks++;
     else letters += store.rack[i].value;
   }
+  state.blanks = blanks;
   state.rack.tiles = letters;
   state.rack.numBlanks = numBlanks;
 }
